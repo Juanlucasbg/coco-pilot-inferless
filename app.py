@@ -3,7 +3,9 @@ from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import logging
-from typing import Optional, List
+import time
+from typing import Optional, List, Dict, Any
+from input_schema import GenerateRequest, GenerateResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,17 +33,6 @@ except Exception as e:
     logger.error(f"Error loading model: {str(e)}")
     raise
 
-class GenerateRequest(BaseModel):
-    prompt: str
-    max_length: Optional[int] = 512
-    temperature: Optional[float] = 0.7
-    top_p: Optional[float] = 0.9
-    num_return_sequences: Optional[int] = 1
-
-class GenerateResponse(BaseModel):
-    generated_text: str
-    prompt: str
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to COCO LLM API"}
@@ -49,6 +40,8 @@ async def root():
 @app.post("/generate", response_model=GenerateResponse)
 async def generate_text(request: GenerateRequest):
     try:
+        start_time = time.time()
+        
         # Tokenize input
         inputs = tokenizer(request.prompt, return_tensors="pt").to(device)
         
@@ -60,15 +53,27 @@ async def generate_text(request: GenerateRequest):
                 temperature=request.temperature,
                 top_p=request.top_p,
                 num_return_sequences=request.num_return_sequences,
-                pad_token_id=tokenizer.eos_token_id
+                pad_token_id=tokenizer.eos_token_id,
+                repetition_penalty=request.repetition_penalty,
+                do_sample=True
             )
         
         # Decode and return the generated text
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
         
+        # Calculate metadata
+        generation_time = time.time() - start_time
+        tokens_generated = len(tokenizer.encode(generated_text))
+        
         return GenerateResponse(
             generated_text=generated_text,
-            prompt=request.prompt
+            prompt=request.prompt,
+            metadata={
+                "generation_time": round(generation_time, 2),
+                "tokens_generated": tokens_generated,
+                "model_name": MODEL_NAME,
+                "device": device
+            }
         )
     
     except Exception as e:
