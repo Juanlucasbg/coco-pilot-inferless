@@ -15,16 +15,10 @@ requirements:
   - accelerate==0.20.3
   - bitsandbytes==0.40.2
   - protobuf==3.20.3
-  - jsonschema==4.17.3
 
 environment:
   MODEL_NAME: "coco-llm"
   DEVICE: "cuda"
-  INPUT_SCHEMA_PATH: "input_schema.py"
-  OUTPUT_SCHEMA_PATH: "input_schema.py"
-  SCHEMA_TYPE: "json"
-  VALIDATOR_HOST: "localhost"
-  VALIDATOR_PORT: "8080"
 
 resources:
   cpu: 2
@@ -37,8 +31,4 @@ endpoints:
     path: /generate
     method: POST
     input_schema: input_schema.py
-    output_schema: input_schema.py
-    schema_type: json
-    validation:
-      enabled: true
-      strict: true 
+    output_schema: input_schema.py 

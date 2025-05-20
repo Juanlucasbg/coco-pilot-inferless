@@ -1,82 +1,73 @@
-from pydantic import BaseModel
+from typing import Optional, List, Dict, Any, Union
+from pydantic import BaseModel, Field, ConfigDict
 
 class GenerateRequest(BaseModel):
-    prompt: str
-    max_length: int = 512
-    temperature: float = 0.7
-    top_p: float = 0.9
-    num_return_sequences: int = 1
-    stop_sequences: list = None
-    repetition_penalty: float = 1.0
+    model_config = ConfigDict(extra='forbid')
+    
+    prompt: str = Field(..., description="The input prompt for text generation")
+    max_length: Optional[int] = Field(default=512, description="Maximum length of the generated text")
+    temperature: Optional[float] = Field(default=0.7, description="Sampling temperature for text generation")
+    top_p: Optional[float] = Field(default=0.9, description="Nucleus sampling parameter")
+    num_return_sequences: Optional[int] = Field(default=1, description="Number of sequences to generate")
+    stop_sequences: Optional[List[str]] = Field(default=None, description="List of sequences that will stop the generation")
+    repetition_penalty: Optional[float] = Field(default=1.0, description="Penalty for repeating tokens")
 
 class GenerateResponse(BaseModel):
-    generated_text: str
-    prompt: str
-    metadata: dict = None
+    model_config = ConfigDict(extra='forbid')
+    
+    generated_text: str = Field(..., description="The generated text response")
+    prompt: str = Field(..., description="The original input prompt")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata about the generation")
 
 # Define the input schema for Inferless
 INPUT_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "title": "GenerateRequest",
     "description": "Schema for text generation request",
     "properties": {
         "prompt": {
             "type": "string",
-            "description": "The input prompt for text generation",
-            "minLength": 1
+            "description": "The input prompt for text generation"
         },
         "max_length": {
             "type": "integer",
             "description": "Maximum length of the generated text",
-            "default": 512,
-            "minimum": 1,
-            "maximum": 2048
+            "default": 512
         },
         "temperature": {
             "type": "number",
             "description": "Sampling temperature for text generation",
-            "default": 0.7,
-            "minimum": 0.0,
-            "maximum": 2.0
+            "default": 0.7
         },
         "top_p": {
             "type": "number",
             "description": "Nucleus sampling parameter",
-            "default": 0.9,
-            "minimum": 0.0,
-            "maximum": 1.0
+            "default": 0.9
         },
         "num_return_sequences": {
             "type": "integer",
             "description": "Number of sequences to generate",
-            "default": 1,
-            "minimum": 1,
-            "maximum": 5
+            "default": 1
         },
         "stop_sequences": {
-            "type": ["array", "null"],
+            "type": "array",
             "description": "List of sequences that will stop the generation",
             "items": {
                 "type": "string"
             },
-            "default": None
+            "default": []
         },
         "repetition_penalty": {
             "type": "number",
             "description": "Penalty for repeating tokens",
-            "default": 1.0,
-            "minimum": 1.0,
-            "maximum": 2.0
+            "default": 1.0
         }
     },
-    "required": ["prompt"],
-    "additionalProperties": False
+    "required": ["prompt"]
 }
 
 # Define the output schema for Inferless
 OUTPUT_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "title": "GenerateResponse",
     "description": "Schema for text generation response",
@@ -90,7 +81,7 @@ OUTPUT_SCHEMA = {
             "description": "The original input prompt"
         },
         "metadata": {
-            "type": ["object", "null"],
+            "type": "object",
             "description": "Additional metadata about the generation",
             "properties": {
                 "generation_time": {
@@ -109,10 +100,8 @@ OUTPUT_SCHEMA = {
                     "type": "string",
                     "description": "Device used for generation"
                 }
-            },
-            "required": ["generation_time", "tokens_generated", "model_name", "device"]
+            }
         }
     },
-    "required": ["generated_text", "prompt"],
-    "additionalProperties": False
+    "required": ["generated_text", "prompt"]
 } 
