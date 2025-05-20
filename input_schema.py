@@ -1,8 +1,8 @@
-from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, List, Dict, Any, Union, TypedDict
+from pydantic import BaseModel, Field, ConfigDict, create_model
 
 class GenerateRequest(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
     
     prompt: str = Field(..., description="The input prompt for text generation")
     max_length: Optional[int] = Field(default=512, description="Maximum length of the generated text")
@@ -13,7 +13,7 @@ class GenerateRequest(BaseModel):
     repetition_penalty: Optional[float] = Field(default=1.0, description="Penalty for repeating tokens")
 
 class GenerateResponse(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', validate_assignment=True)
     
     generated_text: str = Field(..., description="The generated text response")
     prompt: str = Field(..., description="The original input prompt")
@@ -104,4 +104,17 @@ OUTPUT_SCHEMA = {
         }
     },
     "required": ["generated_text", "prompt"]
-} 
+}
+
+# Create Pydantic models from the schemas for validation
+InputModel = create_model(
+    'InputModel',
+    **{k: (v['type'], ...) for k, v in INPUT_SCHEMA['properties'].items() if k in INPUT_SCHEMA['required']},
+    **{k: (v['type'], v.get('default')) for k, v in INPUT_SCHEMA['properties'].items() if k not in INPUT_SCHEMA['required']}
+)
+
+OutputModel = create_model(
+    'OutputModel',
+    **{k: (v['type'], ...) for k, v in OUTPUT_SCHEMA['properties'].items() if k in OUTPUT_SCHEMA['required']},
+    **{k: (v['type'], v.get('default')) for k, v in OUTPUT_SCHEMA['properties'].items() if k not in OUTPUT_SCHEMA['required']}
+) 
