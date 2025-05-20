@@ -2,24 +2,41 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
 import time
+import logging
 from input_schema import GenerateRequest, GenerateResponse
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Model:
     def __init__(self):
-        self.model_name = os.getenv("MODEL_NAME", "coco-llm")
-        self.device = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
-        
-        # Initialize model and tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-            device_map="auto"
-        )
+        try:
+            self.model_name = os.getenv("MODEL_NAME", "coco-llm")
+            self.device = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+            
+            logger.info(f"Initializing model {self.model_name} on {self.device}")
+            
+            # Initialize model and tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name,
+                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                device_map="auto"
+            )
+            logger.info("Model and tokenizer loaded successfully")
+            
+        except Exception as e:
+            logger.error(f"Error initializing model: {str(e)}")
+            raise
 
     def predict(self, request: GenerateRequest) -> GenerateResponse:
         try:
             start_time = time.time()
+            
+            # Validate input
+            if not request.prompt:
+                raise ValueError("Prompt cannot be empty")
             
             # Tokenize input
             inputs = self.tokenizer(request.prompt, return_tensors="pt").to(self.device)
@@ -56,10 +73,16 @@ class Model:
             )
             
         except Exception as e:
-            raise Exception(f"Error during text generation: {str(e)}")
+            logger.error(f"Error during text generation: {str(e)}")
+            raise
 
 # Initialize the model
-model = Model()
+try:
+    model = Model()
+    logger.info("Model initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize model: {str(e)}")
+    raise
 
 def infer(request: GenerateRequest) -> GenerateResponse:
     return model.predict(request) 

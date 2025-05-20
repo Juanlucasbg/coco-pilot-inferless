@@ -1,22 +1,23 @@
 framework: pytorch
 runtime: python3.9
-model: app.py
+model: handler.py
 handler: handler.py
 requirements:
-  - fastapi
-  - uvicorn
-  - transformers
-  - torch
-  - pydantic
-  - requests
-  - typing-extensions
-  - numpy
-  - sentencepiece
-  - accelerate
-  - bitsandbytes
+  - pydantic==1.10.13
+  - fastapi==0.95.2
+  - uvicorn==0.22.0
+  - transformers==4.30.2
+  - torch==2.0.1
+  - requests==2.31.0
+  - typing-extensions==4.7.1
+  - numpy==1.24.3
+  - sentencepiece==0.1.99
+  - accelerate==0.20.3
+  - bitsandbytes==0.40.2
+  - protobuf==3.20.3
 
 environment:
-  MODEL_NAME: "coco-llm"  # Update this with your actual model name
+  MODEL_NAME: "coco-llm"
   DEVICE: "cuda"
 
 resources:
