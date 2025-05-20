@@ -1,0 +1,33 @@
+framework: pytorch
+runtime: python3.9
+model: app.py
+handler: handler.py
+requirements:
+  - fastapi
+  - uvicorn
+  - transformers
+  - torch
+  - pydantic
+  - requests
+  - typing-extensions
+  - numpy
+  - sentencepiece
+  - accelerate
+  - bitsandbytes
+
+environment:
+  MODEL_NAME: "coco-llm"  # Update this with your actual model name
+  DEVICE: "cuda"
+
+resources:
+  cpu: 2
+  memory: 8Gi
+  gpu: 1
+  gpu_type: "t4"
+
+endpoints:
+  - name: generate
+    path: /generate
+    method: POST
+    input_schema: input_schema.py
+    output_schema: input_schema.py 

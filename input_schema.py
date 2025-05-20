@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 
 class GenerateRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    
     prompt: str = Field(
-        ...,
+        default="",
         description="The input prompt for text generation",
         example="Write a story about a magical forest"
     )
@@ -43,12 +45,14 @@ class GenerateRequest(BaseModel):
     )
 
 class GenerateResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    
     generated_text: str = Field(
-        ...,
+        default="",
         description="The generated text response"
     )
     prompt: str = Field(
-        ...,
+        default="",
         description="The original input prompt"
     )
     metadata: Optional[Dict[str, Any]] = Field(
