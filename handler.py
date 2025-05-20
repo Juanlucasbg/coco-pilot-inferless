@@ -3,7 +3,7 @@ import torch
 import os
 import time
 import logging
-from input_schema import GenerateRequest, GenerateResponse
+from input_schema import GenerateRequest, GenerateResponse, INPUT_SCHEMA, OUTPUT_SCHEMA
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,9 +34,9 @@ class Model:
         try:
             start_time = time.time()
             
-            # Validate input
-            if not request.prompt:
-                raise ValueError("Prompt cannot be empty")
+            # Validate input against schema
+            if not isinstance(request.prompt, str):
+                raise ValueError("Prompt must be a string")
             
             # Tokenize input
             inputs = self.tokenizer(request.prompt, return_tensors="pt").to(self.device)
@@ -61,7 +61,7 @@ class Model:
             generation_time = time.time() - start_time
             tokens_generated = len(self.tokenizer.encode(generated_text))
             
-            return GenerateResponse(
+            response = GenerateResponse(
                 generated_text=generated_text,
                 prompt=request.prompt,
                 metadata={
@@ -71,6 +71,12 @@ class Model:
                     "device": self.device
                 }
             )
+            
+            # Validate response against schema
+            if not isinstance(response.generated_text, str):
+                raise ValueError("Generated text must be a string")
+            
+            return response
             
         except Exception as e:
             logger.error(f"Error during text generation: {str(e)}")

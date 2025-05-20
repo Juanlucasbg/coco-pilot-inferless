@@ -19,6 +19,8 @@ requirements:
 environment:
   MODEL_NAME: "coco-llm"
   DEVICE: "cuda"
+  INPUT_SCHEMA_PATH: "input_schema.py"
+  OUTPUT_SCHEMA_PATH: "input_schema.py"
 
 resources:
   cpu: 2
@@ -31,4 +33,5 @@ endpoints:
     path: /generate
     method: POST
     input_schema: input_schema.py
-    output_schema: input_schema.py 
+    output_schema: input_schema.py
+    schema_type: json 
